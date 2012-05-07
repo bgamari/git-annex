@@ -119,6 +119,7 @@ updateTo pairs = do
 	if not dirty && null refs
 		then updateIndex branchref
 		else withIndex $ lockJournal $ do
+			when dirty (liftIO $ print "updateTO -> stageJournal")
 			when dirty stageJournal
 			let merge_desc = if null branches
 				then "update"
@@ -183,6 +184,7 @@ set file content = do
 {- Stages the journal, and commits staged changes to the branch. -}
 commit :: String -> Annex ()
 commit message = whenM unCommitted $ lockJournal $ do
+	liftIO $ print "commit -> stageJournal"
 	stageJournal
 	ref <- getBranch
 	withIndex $ commitBranch ref message [fullname]
@@ -190,6 +192,7 @@ commit message = whenM unCommitted $ lockJournal $ do
 {- Stages the journal, not making a commit to the branch. -}
 stage :: Annex ()
 stage = whenM journalDirty $ lockJournal $ do
+	liftIO $ print "stage -> stageJournal"
 	stageJournal
 	setUnCommitted
 
@@ -330,7 +333,9 @@ setCommitted = void $ do
 {- Stages the journal into the index. -}
 stageJournal :: Annex ()
 stageJournal = do
+	liftIO $ print "in stageJournal"
 	showStoringStateAction
+	liftIO $ print "out stageJournal"
 	fs <- getJournalFiles
 	g <- gitRepo
 	withIndex $ liftIO $ do

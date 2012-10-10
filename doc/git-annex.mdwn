@@ -502,7 +502,8 @@ subdirectories).
 * --auto
 
   Enables automatic mode. Commands that get, drop, or move file contents
-  will only do so when needed to help satisfy the setting of annex.numcopies.
+  will only do so when needed to help satisfy the setting of annex.numcopies,
+  and preferred content configuration.
 
 * --quiet
 
@@ -641,6 +642,20 @@ file contents are present at either of two repositories.
 
   Matches only files whose content is stored using the specified key-value
   backend.
+
+* --ingroup=groupname
+
+  Matches only files that git-annex believes are present in all repositories
+  in the specified group.
+
+* --smallerthan=size
+* --largerthan=size
+
+  Matches only files whose content is smaller than, or larger than the
+  specified size.
+ 
+  The size can be specified with any commonly used units, for example,
+  "0.5 gb" or "100 KiloBytes"
 
 * --not
 

@@ -17,6 +17,7 @@ import Logs.Trust
 import Annex.Content
 import Config
 import qualified Option
+import Annex.Wanted
 
 def :: [Command]
 def = [withOptions [fromOption] $ command "drop" paramPaths seek
@@ -31,13 +32,14 @@ seek = [withField fromOption Remote.byName $ \from ->
 
 start :: Maybe Remote -> FilePath -> (Key, Backend) -> CommandStart
 start from file (key, _) = autoCopiesWith file key (>) $ \numcopies ->
-	case from of
-		Nothing -> startLocal file numcopies key
-		Just remote -> do
-			u <- getUUID
-			if Remote.uuid remote == u
-				then startLocal file numcopies key
-				else startRemote file numcopies key remote
+	stopUnless (checkAuto $ wantDrop (Remote.uuid <$> from) (Just file)) $
+		case from of
+			Nothing -> startLocal file numcopies key
+			Just remote -> do
+				u <- getUUID
+				if Remote.uuid remote == u
+					then startLocal file numcopies key
+					else startRemote file numcopies key remote
 
 startLocal :: FilePath -> Maybe Int -> Key -> CommandStart
 startLocal file numcopies key = stopUnless (inAnnex key) $ do

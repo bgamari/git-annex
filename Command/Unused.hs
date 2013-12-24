@@ -11,8 +11,10 @@ module Command.Unused where
 
 import qualified Data.Set as S
 import qualified Data.ByteString.Lazy as L
-import Data.BloomFilter
-import Data.BloomFilter.Easy
+import qualified Data.BloomFilter as BF
+import Data.BloomFilter (Bloom)
+import qualified Data.BloomFilter.Mutable as BFM
+import Data.BloomFilter.Easy (suggestSizing)
 import Data.BloomFilter.Hash
 import Control.Monad.ST
 import qualified Data.Map as M
@@ -204,14 +206,14 @@ bloomBitsHashes = do
 genBloomFilter :: Hashable t => (v -> t) -> ((v -> Annex ()) -> Annex b) -> Annex (Bloom t)
 genBloomFilter convert populate = do
 	(numbits, numhashes) <- bloomBitsHashes
-	bloom <- lift $ newMB (cheapHashes numhashes) numbits
-	_ <- populate $ \v -> lift $ insertMB bloom (convert v)
-	lift $ unsafeFreezeMB bloom
+	bloom <- lift $ BFM.new (cheapHashes numhashes) numbits
+	_ <- populate $ \v -> lift $ BFM.insert bloom (convert v)
+	lift $ BF.unsafeFreeze bloom
   where
 	lift = liftIO . stToIO
 
 bloomFilter :: Hashable t => (v -> t) -> [v] -> Bloom t -> [v]
-bloomFilter convert l bloom = filter (\k -> convert k `notElemB` bloom) l
+bloomFilter convert l bloom = filter (\k -> convert k `BF.notElem` bloom) l
 
 {- Given an initial value, folds it with each key referenced by
  - symlinks in the git repo. -}
